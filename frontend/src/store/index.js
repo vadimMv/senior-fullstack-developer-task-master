@@ -1,7 +1,7 @@
 import { createStore } from "vuex"
 import axios from "axios"
 
-const API_BASE_URL =  'http://localhost:3000'
+const API_BASE_URL = 'http://localhost:3000'
 
 export default createStore({
 	state: {
@@ -13,16 +13,21 @@ export default createStore({
 	getters: {
 		currentUser: (state) => state.user,
 		isAuthenticated: (state) => state.isAuthenticated,
-		userRoles: (state) => state.user ? state.user.getRoles() : [],
-		hasRole: (state) => (role) => {
-			if (!state.user) return false
-			const roles = Array.isArray(state.user.roles) ? state.user.roles : JSON.parse(state.user.roles || '[]')
-			return roles.includes(role)
+		userRoles: (state) => {
+			if (!state.user) return []
+			try {
+				return typeof state.user.roles === 'string'
+					? JSON.parse(state.user.roles)
+					: state.user.roles || []
+			} catch {
+				return ['User']
+			}
 		},
-		hasAnyRole: (state) => (roles) => {
-			if (!state.user) return false
-			const userRoles = Array.isArray(state.user.roles) ? state.user.roles : JSON.parse(state.user.roles || '[]')
-			return roles.some(role => userRoles.includes(role))
+		hasRole: (state, getters) => (role) => {
+			return getters.userRoles.includes(role)
+		},
+		hasAnyRole: (state, getters) => (roles) => {
+			return roles.some(role => getters.userRoles.includes(role))
 		},
 		username: (state) => state.user?.username || '',
 		isLoading: (state) => state.loading,
@@ -51,14 +56,14 @@ export default createStore({
 		async login({ commit }, username) {
 			commit('SET_LOADING', true)
 			commit('CLEAR_ERROR')
-			
+
 			try {
 				const response = await axios.post(`${API_BASE_URL}/users/login/${username}`, {}, {
 					headers: {
 						'token': username
 					}
 				})
-				
+
 				const user = response.data
 				commit('SET_USER', user)
 				return user
@@ -70,12 +75,12 @@ export default createStore({
 				commit('SET_LOADING', false)
 			}
 		},
-		
+
 		logout({ commit }) {
 			commit('CLEAR_USER')
 			commit('CLEAR_ERROR')
 		},
-		
+
 		clearError({ commit }) {
 			commit('CLEAR_ERROR')
 		}
