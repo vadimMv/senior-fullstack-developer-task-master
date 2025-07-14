@@ -1,10 +1,4 @@
 <template>
-	<div>
-		<h1>Admins Page</h1>
-		<p>Welcome</p>
-	</div>
-</template>
-<template>
 	<div class="admin">
 		<h1>Admin Page</h1>
 		<p>Welcome {{ username }}!</p>
